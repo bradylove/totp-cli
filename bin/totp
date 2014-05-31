@@ -1,0 +1,92 @@
+#!/usr/bin/env ruby
+
+root = File.expand_path(File.join(File.dirname(__FILE__),'..'))
+if File.directory?(File.join(root,'.git'))
+  Dir.chdir(root) do
+    begin
+      require 'bundler/setup'
+    rescue LoadError => e
+      warn e.message
+      warn "Run `gem install bundler` to install Bundler"
+      exit -1
+    end
+  end
+end
+
+require 'slop'
+require 'totp/cli'
+
+opts = Slop.parse(help: true) do
+  banner = 'Usage: totp (action) [options]'
+
+  on :v, :version, 'Print the version' do
+    run do
+      puts TOTP::CLI::VERSION
+    end
+  end
+
+  command 'list' do
+    run do |opts, args|
+      store =
+      tokens = TOTP::CLI::Token.all
+
+      tokens.each do |token|
+        puts "#{token.id}\t| #{token.label}\t | #{token.now}"
+      end
+    end
+  end
+
+  command 'add' do
+    on :s=, :secret=, 'Secret for the TOTP token', :string
+    on :l=, :label=, 'Label for the TOTP token', :string
+
+    run do |opts, args|
+      options = opts.to_hash
+
+      token = TOTP::CLI::Token.create(opts[:label], opts[:secret])
+
+      puts "#{token.id}\t| #{token.label}\t | #{token.now}"
+    end
+  end
+
+  command 'now' do
+    on :i=, :id=, 'ID of TOTP from list', :string
+    on :l=, :label=, 'Label for the TOTP token', :string
+    on :c, :clipboard, "Copy to clipboard?"
+
+    run do |opts, args|
+      token = nil
+
+      if opts[:id]
+        token = TOTP::CLI::Token.find_by_id(opts[:id].to_i)
+
+        if !token
+          puts "Unable to find token with id #{opts[:id]}"
+          exit -1
+        end
+      elsif opts[:label]
+        token = TOTP::CLI::Token.find_by_label(opts[:label].strip)
+
+        if !token
+          puts "Unable to find token with id #{opts[:id]}"
+          exit -1
+        end
+      end
+
+      puts "#{token.id}\t| #{token.label}\t | #{token.now}"
+
+      if opts[:clipboard]
+        TOTP::CLI::Clipboard.set(token.now)
+      end
+    end
+  end
+
+  command 'remove' do
+    on :i=, :id=, 'ID of TOTP from list', :string
+    on :l=, :label=, 'Label for the TOTP token', :string
+
+    run do |opts, args|
+      puts "===> opts: #{opts.inspect}"
+    end
+  end
+end
