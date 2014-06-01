@@ -41,7 +41,8 @@ opts = Slop.parse(help: true) do
     on :l=, :label=, 'Label for the TOTP token', :string
 
     run do |opts, args|
-      options = opts.to_hash
+      raise "secret is required" unless opts[:secret]
+      raise "label is required" unless opts[:label]
 
       token = TOTP::CLI::Token.create(opts[:label], opts[:secret])
 
@@ -86,7 +87,23 @@ opts = Slop.parse(help: true) do
     on :l=, :label=, 'Label for the TOTP token', :string
 
     run do |opts, args|
-      puts "===> opts: #{opts.inspect}"
+      if opts[:id]
+        token = TOTP::CLI::Token.find_by_id(opts[:id].to_i)
+
+        if !token
+          puts "Unable to find token with id #{opts[:id]}"
+          exit -1
+        end
+      elsif opts[:label]
+        token = TOTP::CLI::Token.find_by_label(opts[:label].strip)
+
+        if !token
+          puts "Unable to find token with id #{opts[:id]}"
+          exit -1
+        end
+      end
+
+      token.delete!
     end
   end
 end

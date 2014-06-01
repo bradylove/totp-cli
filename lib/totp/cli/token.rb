@@ -55,6 +55,10 @@ module TOTP
         otp
       end
 
+      def delete!
+        self.class.store.remove(label)
+      end
+
       private
 
       def totp
