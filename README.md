@@ -1,5 +1,4 @@
 # TOTP CLI
-======================================
 
 TOTP CLI is a command line application for storing and generating OTP (One Time Password)
 tokens. This is a quick rushed through version that doesn't have any tests.
