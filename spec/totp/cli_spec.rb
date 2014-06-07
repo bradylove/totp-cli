@@ -1,8 +1,8 @@
 require 'spec_helper'
 require 'totp/cli'
 
-describe Totp::Cli do
+describe TOTP::CLI do
   it "should have a VERSION constant" do
-    subject.const_get('VERSION').should_not be_empty
+    expect(subject.const_get('VERSION')).to_not be_empty
   end
 end
